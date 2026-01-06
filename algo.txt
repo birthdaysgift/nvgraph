@@ -41,3 +41,23 @@ case (RC in CC.children):
     CC.col = RC.col
 
 
+--------
+
+columns contain hashes (or None, if column is available)
+
+register_column():
+- search columns from left to right to match (CC.hash in column[hash].parents)
+- if hash isn't found - choose leftmost available
+- if hash is found
+    - if child is RC - use its column
+    - if child is MC and CC.hash = MC.left_parent - use its column
+    - if child is MC and CC.hash = MC.right_parent - choose leftmost avaiable
+
+free_columns():
+- go over CC.children
+- if child.hash occupies column
+    and CC.hash is the only parent of child
+    then that's where child branch were started of
+    so we can free this column, for other commits below
+
+

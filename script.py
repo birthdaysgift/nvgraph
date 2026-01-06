@@ -14,75 +14,43 @@ def format(commits, tree):
     columns = []
 
     for commit in commits:
-        children = tree[commit["hash"]]["children"]
+        hash = commit["hash"]
 
         # ALGO BEGIN
-
-        if len(children) == 0:
-            commit["column"] = find_column(columns)
-            yield get_line(commit)
-            continue
-
-        MC_children = [child for child in children if is_MC(child, tree)]
-        RC_children = [child for child in children if is_RC(child, tree)]
-
-        if MC_children:
-
-            left_parent, right_parent = tree[MC_children[0]]["parents"]
-
-            if commit["hash"] == right_parent:
-                if RC_children:
-                    commit["column"] = [commit for commit in commits if commit["hash"] == RC_children[0]][0]["column"]
-                    yield get_line(commit)
-                    continue
-                if not RC_children:
-                    commit["column"] = find_column(columns)
-                    yield get_line(commit)
-                    continue
-
-            if commit["hash"] == left_parent:
-                commit["column"] = [commit for commit in commits if commit["hash"] == MC_children[0]][0]["column"]
-
-                if MC_children and RC_children:
-                    for child in RC_children:
-                        free_column(columns, [commit for commit in commits if commit["hash"] == child][0]["column"])
-
-                yield get_line(commit)
-                continue
-
-        if RC_children:
-            commit["column"] = [commit for commit in commits if commit["hash"] == RC_children[0]][0]["column"]
-            yield get_line(commit)
-            continue
-
+        free_columns(columns, hash, tree)
+        col = register_column(columns, hash, tree)
         # ALGO END
 
-
-def is_MC(hash, tree):
-    return len(tree[hash]["parents"]) == 2
-
-
-def is_RC(hash, tree):
-    return not is_MC(hash, tree)
+        shift = " | " * col
+        yield f"{shift} * {hash}"
 
 
-def get_line(commit):
-    shift = (" | " * commit["column"])
-    return f"{shift} * {commit['hash']}"
+def register_column(columns, hash, tree):
+    for col, col_hash in enumerate(columns):
 
+        if hash not in tree[col_hash]["parents"]:
+            continue
+        parents = tree[col_hash]["parents"]
 
-def find_column(columns):
-    for column, occupied in enumerate(columns):
-        if not occupied:
-            columns[column] = True
-            return column
+        # either RC or MC.left_parent
+        if hash == parents[0]:
+            columns[col] = hash
+            return col
 
-    columns.append(True)
+    # choose leftmost available
+    for col, col_hash in enumerate(columns):
+        if col_hash is None:
+            columns[col] = hash
+            return col
+    columns.append(hash)
     return len(columns) - 1
 
 
-def free_column(columns, column):
-    columns[column] = False
+def free_columns(columns, hash, tree):
+    for child in tree[hash]["children"]:
+        for col, col_hash in enumerate(columns):
+            if col_hash == child and tree[child]["parents"] == [hash]:
+                columns[col] = None
 
 
 def parse(text):
@@ -91,7 +59,7 @@ def parse(text):
 
     for line in text.split(b"\n"):
         hash, parents, refs, subject, author = [v.decode() for v in line.split(b"^")]
-        commits.append({"hash": hash, "refs": refs, "subject": subject, "author": author, "column": 0})
+        commits.append({"hash": hash, "refs": refs, "subject": subject, "author": author})
 
         for parent in parents.split(" "):
             tree[hash]["parents"].append(parent)
