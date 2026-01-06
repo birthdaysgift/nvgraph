@@ -3,7 +3,7 @@ import collections
 
 
 def main():
-    log = cmd()
+    log = cmd("topo")
 
     commits, tree = parse(log)
     for line in format(commits, tree):
@@ -100,8 +100,8 @@ def parse(text):
     return commits, tree
 
 
-def cmd():
-    cmd = 'git log --all --pretty=format:%h^%p^%D^%s^%an --max-count=50 --date-order'
+def cmd(order_type):
+    cmd = f'git log --all --pretty=format:%h^%p^%D^%s^%an --max-count=50 --{order_type}-order'
     result = subprocess.run(cmd.split(" "), text=False, cwd="/home/mint/code/ip_api", capture_output=True)
     return result.stdout.strip()
 
