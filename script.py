@@ -70,7 +70,7 @@ def parse(text):
 
 def cmd(order_type):
     cmd = f'git log --all --pretty=format:%h^%p^%D^%s^%an --max-count=50 --{order_type}-order'
-    result = subprocess.run(cmd.split(" "), text=False, cwd="/home/mint/code/ip_api", capture_output=True)
+    result = subprocess.run(cmd.split(" "), text=False, cwd="/home/mint/code/ip_api_test_graph", capture_output=True)
     return result.stdout.strip()
 
 
