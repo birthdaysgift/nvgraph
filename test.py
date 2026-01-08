@@ -10,7 +10,7 @@ def main():
 def test_topo_order():
     print("    - Testing topo order...")
     for actual, expected in zip(
-        format(*parse(cmd("topo"))),
+        format(*parse(cmd("topo", limit=50))),
         [
             " * 69466d6e",
             " |  * a75fec18",
@@ -71,7 +71,7 @@ def test_topo_order():
 def test_date_order():
     print("    - Testing date order...")
     for actual, expected in zip(
-        format(*parse(cmd("date"))),
+        format(*parse(cmd("date", limit=50))),
         [
             " * 69466d6e",
             " |  * a75fec18",
@@ -132,7 +132,7 @@ def test_date_order():
 def test_author_date_order():
     print("    - Testing author-date order...")
     for actual, expected in zip(
-        format(*parse(cmd("author-date"))),
+        format(*parse(cmd("author-date", limit=50))),
         [
             " * 69466d6e",
             " |  * a75fec18",
