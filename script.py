@@ -61,10 +61,10 @@ def occupy_columns(columns: list, hash, tree):
         col = list_index(columns, None)
         if col is not None:
             columns[col] = f"occupied {right_parent}"
-            return
+            return col
         if col is None:
             columns.append(f"occupied {right_parent}")
-            return
+            return len(columns) - 1
 
 
 def list_index(iterable, value):
