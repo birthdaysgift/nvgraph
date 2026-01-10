@@ -16,8 +16,6 @@ def format(commits, tree):
 
     for commit in commits:
 
-        if commit["hash"] == "9032e8e1":
-            pass
         col = register_column(columns, commit["hash"], tree)
         columns[col] = commit["hash"]
         free_columns(columns, commit["hash"], tree)
