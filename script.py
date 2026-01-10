@@ -12,11 +12,34 @@ def format(commits, tree):
     columns = []
 
     for commit in commits:
+        prev_columns = columns.copy()
+
         free_columns(columns, commit["hash"], tree)
         col = register_column(columns, commit["hash"], tree)
         columns[col] = commit["hash"]
 
-        shift = "   " * col
+        connectors = ["   " for _ in columns]
+        for i, column_hash in enumerate(prev_columns):
+
+            # branch start connector
+            if column_hash in tree[commit["hash"]]["children"]:
+                child_col = list_index(prev_columns, column_hash)
+                if child_col > col:
+                    connectors[child_col] = " ╯ "
+
+            # branch merge connector
+            if column_hash in tree[commit["hash"]]["children"]:
+                child = column_hash
+                if len(tree[child]["parents"]) == 2 and commit["hash"] == tree[child]["parents"][1]:
+                    if child_col < col:
+                        connectors[col] = " ╮ "
+
+            if None not in (columns[i], column_hash):
+                connectors[i] = " │ "
+
+        yield "".join(connectors)
+
+        shift = " │ " * col
         yield f"{shift} * {commit['hash']}"
 
 
