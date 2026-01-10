@@ -4,68 +4,38 @@ from itertools import zip_longest
 
 
 def main():
-    commits, tree = parse(cmd("topo", limit=50))
-    width, lines = format(commits, tree)
-    for graph_line, message in lines:
-        print(f"{graph_line.ljust(width, ' ')}{message}")
+    commits, tree = parse(cmd("date", limit=50))
+    lines = format(commits, tree)
+    for line in lines:
+        print(line)
 
 
 def format(commits, tree):
     max_width = 0
     columns = []
 
-    result = []
-
     for commit in commits:
-        prev_columns = columns.copy()
 
-        free_columns(columns, commit["hash"], tree)
+        if commit["hash"] == "9032e8e1":
+            pass
         col = register_column(columns, commit["hash"], tree)
         columns[col] = commit["hash"]
+        free_columns(columns, commit["hash"], tree)
+        occupy_columns(columns, commit["hash"], tree)
 
-        connectors = ["   " for _ in columns]
-        for i, column_hash in enumerate(prev_columns):
-
-            # branch start connector
-            if column_hash in tree[commit["hash"]]["children"]:
-                child_col = list_index(prev_columns, column_hash)
-                if child_col > col:
-                    connectors[child_col] = " ╯ "
-
-            # branch merge connector
-            if column_hash in tree[commit["hash"]]["children"]:
-                child = column_hash
-                if len(tree[child]["parents"]) == 2 and commit["hash"] == tree[child]["parents"][1]:
-                    if child_col < col:
-                        connectors[col] = " ╮ "
-
-            if None not in (columns[i], column_hash):
-                connectors[i] = " │ "
-
-        result.append(("".join(connectors), ""))
-
-        commit_line = []
-        for prev_col, curr_col in zip_longest(prev_columns, columns, fillvalue=None):
-            if curr_col == commit["hash"]:
-                commit_line.append(" * ")
-                continue
-            if prev_col and curr_col:
-                commit_line.append(" │ ")
-                continue
-            commit_line.append("   ")
-
-        shift = "".join(commit_line)
+        shift = ("| " * col) + "* "
         max_width = max(len(shift) + 3, max_width)
 
-        result.append((shift, commit['hash']))
-
-    return max_width, result
+        yield shift + commit['hash']
 
 
 def register_column(columns, hash, tree):
     for col, col_hash in enumerate(columns):
         if tree[col_hash]["parents"] and hash == tree[col_hash]["parents"][0]:
             # either RC or MC.left_parent
+            return col
+        if col_hash == f"occupied {hash}":
+            # occupied before
             return col
 
     # choose leftmost available column (contains None)
@@ -78,9 +48,23 @@ def register_column(columns, hash, tree):
 
 def free_columns(columns: list, hash, tree):
     for child in tree[hash]["children"]:
-        col = list_index(columns, child)
-        if col is not None and tree[child]["parents"] == [hash]:
-            columns[col] = None
+        hash_index = list_index(columns, hash)
+        child_index = list_index(columns, child)
+        if child_index is not None and child_index != hash_index and tree[child]["parents"] == [hash]:
+            columns[child_index] = None
+
+
+def occupy_columns(columns: list, hash, tree):
+    if len(tree[hash]["parents"]) == 2:
+        # choose leftmost available column (contains None)
+        right_parent = tree[hash]["parents"][1]
+        col = list_index(columns, None)
+        if col is not None:
+            columns[col] = f"occupied {right_parent}"
+            return
+        if col is None:
+            columns.append(f"occupied {right_parent}")
+            return
 
 
 def list_index(iterable, value):
