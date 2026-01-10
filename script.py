@@ -1,15 +1,20 @@
 import subprocess
 import collections
+from itertools import zip_longest
 
 
 def main():
     commits, tree = parse(cmd("topo", limit=50))
-    for line in format(commits, tree):
-        print(line)
+    width, lines = format(commits, tree)
+    for graph_line, message in lines:
+        print(f"{graph_line.ljust(width, ' ')}{message}")
 
 
 def format(commits, tree):
+    max_width = 0
     columns = []
+
+    result = []
 
     for commit in commits:
         prev_columns = columns.copy()
@@ -37,10 +42,24 @@ def format(commits, tree):
             if None not in (columns[i], column_hash):
                 connectors[i] = " │ "
 
-        yield "".join(connectors)
+        result.append(("".join(connectors), ""))
 
-        shift = " │ " * col
-        yield f"{shift} * {commit['hash']}"
+        commit_line = []
+        for prev_col, curr_col in zip_longest(prev_columns, columns, fillvalue=None):
+            if curr_col == commit["hash"]:
+                commit_line.append(" * ")
+                continue
+            if prev_col and curr_col:
+                commit_line.append(" │ ")
+                continue
+            commit_line.append("   ")
+
+        shift = "".join(commit_line)
+        max_width = max(len(shift) + 3, max_width)
+
+        result.append((shift, commit['hash']))
+
+    return max_width, result
 
 
 def register_column(columns, hash, tree):
