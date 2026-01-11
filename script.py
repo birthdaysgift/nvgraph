@@ -11,19 +11,9 @@ def main():
 
 
 def format(commits, tree):
-    max_width = 0
-    columns = []
-
     for commit in commits:
-
-        col = register_column(columns, commit["hash"], tree)
-        columns[col] = commit["hash"]
-        free_columns(columns, commit["hash"], tree)
-        occupy_columns(columns, commit["hash"], tree)
-
-        shift = ("| " * col) + "* "
-        max_width = max(len(shift) + 3, max_width)
-
+        col = tree[commit["hash"]]["col"]
+        shift = ("  " * col) + "* "
         yield shift + commit['hash']
 
 
@@ -74,15 +64,23 @@ def list_index(iterable, value):
 
 def parse(text):
     commits = []
-    tree = collections.defaultdict(lambda: {"parents": [], "children": []})
+    tree = collections.defaultdict(lambda: {"parents": [], "children": [], "col": None, "row": None})
 
-    for line in text.split(b"\n"):
+    columns = []  # currently occupied columns
+    for row, line in enumerate(text.split(b"\n")):
         hash, parents, refs, subject, author = [v.decode() for v in line.split(b"^")]
         commits.append({"hash": hash, "refs": refs, "subject": subject, "author": author})
 
         for parent in parents.split(" "):
             tree[hash]["parents"].append(parent)
             tree[parent]["children"].append(hash)
+
+        col = register_column(columns, hash, tree)
+        columns[col] = hash
+        tree[hash]["col"] = col
+        tree[hash]["row"] = row
+        free_columns(columns, hash, tree)
+        occupy_columns(columns, hash, tree)
 
     return commits, tree
 
