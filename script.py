@@ -74,7 +74,10 @@ def format(commits, tree):
                 for i, connector in enumerate(connectors):
                     if i == parent_col:
                         break
-                    connectors.put(i, connector[0] + "─")
+                    if connector == "  ":
+                        connectors.put(i, "──")
+                    else:
+                        connectors.put(i, connector[0] + "─")
                 continue
 
         for fcol, fcommit in enumerate(fallcommits):
@@ -85,7 +88,10 @@ def format(commits, tree):
                     for i, connector in enumerate(connectors):
                         if i == fcol:
                             break
-                        connectors.put(i, connector[0] + "─")
+                        if connector == "  ":
+                            connectors.put(i, "──")
+                        else:
+                            connectors.put(i, connector[0] + "─")
                     continue
 
         yield commit["hash"] + "  " + shift
