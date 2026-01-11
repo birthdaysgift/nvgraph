@@ -47,7 +47,6 @@ def format(commits, tree):
         connectors = AutoList(default="  ")
         for parent in tree[commit["hash"]]["parents"]:
             parent_col = tree[parent]["col"]
-            parent_row = tree[parent]["row"]
 
             for fcol, fcommit in enumerate(fallcommits):
                 if fcommit is None:
@@ -103,7 +102,7 @@ def register_column(columns, hash, tree):
         if tree[col_hash]["parents"] and hash == tree[col_hash]["parents"][0]:
             # either RC or MC.left_parent
             return col
-        if col_hash == f"occupied {hash}":
+        if col_hash == hash:
             # occupied before
             return col
 
@@ -111,7 +110,7 @@ def register_column(columns, hash, tree):
     col = list_index(columns, None)
     if col is not None:
         return col
-    columns.append(hash)
+    columns.append(None)
     return len(columns) - 1
 
 
@@ -125,15 +124,12 @@ def free_columns(columns: list, hash, tree):
 
 def occupy_columns(columns: list, hash, tree):
     if len(tree[hash]["parents"]) == 2:
-        # choose leftmost available column (contains None)
-        right_parent = tree[hash]["parents"][1]
+        # choose leftmost available column (contains None) to place right parent there
         col = list_index(columns, None)
         if col is not None:
-            columns[col] = f"occupied {right_parent}"
-            return col
+            columns[col] = tree[hash]["parents"][1]
         if col is None:
-            columns.append(f"occupied {right_parent}")
-            return len(columns) - 1
+            columns.append(tree[hash]["parents"][1])
 
 
 def list_index(iterable, value):
@@ -158,10 +154,11 @@ def parse(text):
 
         col = register_column(columns, hash, tree)
         columns[col] = hash
-        tree[hash]["col"] = col
-        tree[hash]["row"] = row
         free_columns(columns, hash, tree)
         occupy_columns(columns, hash, tree)
+
+        tree[hash]["col"] = col
+        tree[hash]["row"] = row
 
     return commits, tree
 
