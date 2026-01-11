@@ -71,11 +71,10 @@ def format(commits, tree):
             if parent_col > col:
                 connectors.put(parent_col, "╮ ")
                 fallcommits.put(parent_col, parent)
-                continue
-
-            if parent_col < col and parent_row == row + 1:
-                connectors.put(col, "╯ ")
-                fallcommits.put(col, None)
+                for i, connector in enumerate(connectors):
+                    if i == parent_col:
+                        break
+                    connectors.put(i, connector[0] + "─")
                 continue
 
         for fcol, fcommit in enumerate(fallcommits):
@@ -83,6 +82,10 @@ def format(commits, tree):
                 if tree[fparent]["col"] is not None and tree[fparent]["col"] < fcol and tree[fparent]["row"] == row + 1:
                     connectors.put(fcol, "╯ ")
                     fallcommits.put(fcol, None)
+                    for i, connector in enumerate(connectors):
+                        if i == fcol:
+                            break
+                        connectors.put(i, connector[0] + "─")
                     continue
 
         yield commit["hash"] + "  " + shift
