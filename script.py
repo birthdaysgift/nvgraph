@@ -1,6 +1,22 @@
 import subprocess
 import collections
-from itertools import zip_longest
+
+
+class AutoList:
+    def __init__(self, default=None):
+        self._data = []
+        self._default = default
+
+    def put(self, index, value):
+        while index > len(self._data) - 1 :
+            self._data.append(self._default)
+        self._data[index] = value
+
+    def __repr__(self):
+        return repr(self._data)
+
+    def __iter__(self):
+        return iter(self._data)
 
 
 def main():
@@ -11,10 +27,54 @@ def main():
 
 
 def format(commits, tree):
-    for commit in commits:
+    fallcommits = AutoList()
+    for row, commit in enumerate(commits):
         col = tree[commit["hash"]]["col"]
+
+        connectors = AutoList(default="  ")
+        for parent in tree[commit["hash"]]["parents"]:
+            parent_col = tree[parent]["col"]
+            parent_row = tree[parent]["row"]
+
+            for fcol, fcommit in enumerate(fallcommits):
+                if fcommit is None:
+                    connectors.put(fcol, "  ")
+                if fcommit is not None:
+                    connectors.put(fcol, "│ ")
+
+            # parent is beyond chosen commit scope
+            if parent_col is None:
+                connectors.put(col, "│ ")
+                fallcommits.put(col, "beyondscope")
+                continue
+
+            # child and parent are in the same column
+            if parent_col == col:
+                connectors.put(col, "│ ")
+                fallcommits.put(col, parent)
+                continue
+
+            # branch is merged into current commit
+            if parent_col > col:
+                connectors.put(parent_col, "╮ ")
+                fallcommits.put(parent_col, parent)
+                continue
+
+            if parent_col < col and parent_row == row + 1:
+                connectors.put(col, "╯ ")
+                fallcommits.put(col, None)
+                continue
+
+        for fcol, fcommit in enumerate(fallcommits):
+            for fparent in tree[fcommit]["parents"]:
+                if tree[fparent]["col"] is not None and tree[fparent]["col"] < fcol and tree[fparent]["row"] == row + 1:
+                    connectors.put(fcol, "╯ ")
+                    fallcommits.put(fcol, None)
+                    continue
+
         shift = ("  " * col) + "* "
-        yield shift + commit['hash']
+        yield shift + commit["hash"]
+        yield "".join(connectors)
 
 
 def register_column(columns, hash, tree):
