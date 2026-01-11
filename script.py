@@ -31,6 +31,19 @@ def format(commits, tree):
     for row, commit in enumerate(commits):
         col = tree[commit["hash"]]["col"]
 
+        fallcommits.put(col, commit["hash"])
+        shift = ""
+        for fcol, fcommit in enumerate(fallcommits):
+            if fcol == col:
+                shift += "* "
+                continue
+            if fcommit is not None:
+                shift += "│ "
+                continue
+            if fcommit is None:
+                shift += "  "
+
+
         connectors = AutoList(default="  ")
         for parent in tree[commit["hash"]]["parents"]:
             parent_col = tree[parent]["col"]
@@ -72,7 +85,6 @@ def format(commits, tree):
                     fallcommits.put(fcol, None)
                     continue
 
-        shift = ("  " * col) + "* "
         yield shift + commit["hash"]
         yield "".join(connectors)
 
