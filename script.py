@@ -85,8 +85,8 @@ def format(commits, tree):
                     fallcommits.put(fcol, None)
                     continue
 
-        yield shift + commit["hash"]
-        yield "".join(connectors)
+        yield commit["hash"] + "  " + shift
+        yield (" " * len(commit["hash"])) + "  " + "".join(connectors)
 
 
 def register_column(columns, hash, tree):
