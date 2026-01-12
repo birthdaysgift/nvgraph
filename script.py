@@ -31,37 +31,18 @@ def format(commits, tree):
     for row, commit in enumerate(commits):
         col = tree[commit["hash"]]["col"]
 
-        fallcommits.put(col, commit["hash"])
-        shift = ""
-        for fcol, fcommit in enumerate(fallcommits):
-            if fcol == col:
-                shift += "* "
-                continue
-            if fcommit is not None:
-                shift += "│ "
-                continue
-            if fcommit is None:
-                shift += "  "
-
+        shift = AutoList(default="  ")
+        [shift.put(fcol, "│ ") for fcol, fcommit in enumerate(fallcommits) if fcommit is not None]
+        shift.put(col, "* ")
 
         connectors = AutoList(default="  ")
+        [connectors.put(fcol, "│ ") for fcol, fcommit in enumerate(fallcommits) if fcommit is not None]
+
         for parent in tree[commit["hash"]]["parents"]:
             parent_col = tree[parent]["col"]
 
-            for fcol, fcommit in enumerate(fallcommits):
-                if fcommit is None:
-                    connectors.put(fcol, "  ")
-                if fcommit is not None:
-                    connectors.put(fcol, "│ ")
-
-            # parent is beyond chosen commit scope
-            if parent_col is None:
-                connectors.put(col, "│ ")
-                fallcommits.put(col, "beyondscope")
-                continue
-
-            # child and parent are in the same column
-            if parent_col == col:
+            # parent is beyond chosen commit scope or child and parent are in the same column
+            if parent_col is None or parent_col == col:
                 connectors.put(col, "│ ")
                 fallcommits.put(col, parent)
                 continue
@@ -73,11 +54,7 @@ def format(commits, tree):
                 for i, connector in enumerate(connectors):
                     if i == parent_col:
                         break
-                    if connector == "  ":
-                        connectors.put(i, "──")
-                    else:
-                        connectors.put(i, connector[0] + "─")
-                continue
+                    connectors.put(i, "──" if connector == "  " else connector[0] + "─")
 
         for fcol, fcommit in enumerate(fallcommits):
             for fparent in tree[fcommit]["parents"]:
@@ -87,13 +64,9 @@ def format(commits, tree):
                     for i, connector in enumerate(connectors):
                         if i == fcol:
                             break
-                        if connector == "  ":
-                            connectors.put(i, "──")
-                        else:
-                            connectors.put(i, connector[0] + "─")
-                    continue
+                        connectors.put(i, "──" if connector == "  " else connector[0] + "─")
 
-        yield commit["hash"] + "  " + shift
+        yield commit["hash"] + "  " + "".join(shift)
         yield (" " * len(commit["hash"])) + "  " + "".join(connectors)
 
 
