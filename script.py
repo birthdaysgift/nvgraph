@@ -2,21 +2,15 @@ import subprocess
 import collections
 
 
-class AutoList:
-    def __init__(self, default=None):
-        self._data = []
+class AutoList(collections.UserList):
+    def __init__(self, data=None, default=None):
+        super().__init__(data or [])
         self._default = default
 
     def put(self, index, value):
-        while index > len(self._data) - 1 :
-            self._data.append(self._default)
-        self._data[index] = value
-
-    def __repr__(self):
-        return repr(self._data)
-
-    def __iter__(self):
-        return iter(self._data)
+        while index > len(self.data) - 1 :
+            self.data.append(self._default)
+        self.data[index] = value
 
 
 def main():
@@ -51,9 +45,7 @@ def format(commits, tree):
             if parent_col > col:
                 connectors.put(parent_col, "╮ ")
                 fallcommits.put(parent_col, parent)
-                for i, connector in enumerate(connectors):
-                    if i == parent_col:
-                        break
+                for i, connector in enumerate(connectors[:parent_col]):
                     connectors.put(i, "──" if connector == "  " else connector[0] + "─")
 
         for fcol, fcommit in enumerate(fallcommits):
@@ -61,9 +53,7 @@ def format(commits, tree):
                 if tree[fparent]["col"] is not None and tree[fparent]["col"] < fcol and tree[fparent]["row"] == row + 1:
                     connectors.put(fcol, "╯ ")
                     fallcommits.put(fcol, None)
-                    for i, connector in enumerate(connectors):
-                        if i == fcol:
-                            break
+                    for i, connector in enumerate(connectors[:fcol]):
                         connectors.put(i, "──" if connector == "  " else connector[0] + "─")
 
         yield commit["hash"] + "  " + "".join(shift)
