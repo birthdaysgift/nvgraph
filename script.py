@@ -25,29 +25,28 @@ def format(commits, tree):
     for row, commit in enumerate(commits):
         col = tree[commit["hash"]]["col"]
 
+        # generate commit line
         shift = AutoList(default="  ")
         [shift.put(fcol, "│ ") for fcol, fcommit in enumerate(fallcommits) if fcommit is not None]
         shift.put(col, "* ")
+        yield commit["hash"] + "  " + "".join(shift)
 
+        # generate connector line below the commit line
         connectors = AutoList(default="  ")
         [connectors.put(fcol, "│ ") for fcol, fcommit in enumerate(fallcommits) if fcommit is not None]
-
         for parent in tree[commit["hash"]]["parents"]:
             parent_col = tree[parent]["col"]
-
             # parent is beyond chosen commit scope or child and parent are in the same column
             if parent_col is None or parent_col == col:
                 connectors.put(col, "│ ")
                 fallcommits.put(col, parent)
                 continue
-
             # branch is merged into current commit
             if parent_col > col:
                 connectors.put(parent_col, "╮ ")
                 fallcommits.put(parent_col, parent)
                 for i, connector in enumerate(connectors[:parent_col]):
                     connectors.put(i, "──" if connector == "  " else connector[0] + "─")
-
         for fcol, fcommit in enumerate(fallcommits):
             for fparent in tree[fcommit]["parents"]:
                 if tree[fparent]["col"] is not None and tree[fparent]["col"] < fcol and tree[fparent]["row"] == row + 1:
@@ -55,8 +54,6 @@ def format(commits, tree):
                     fallcommits.put(fcol, None)
                     for i, connector in enumerate(connectors[:fcol]):
                         connectors.put(i, "──" if connector == "  " else connector[0] + "─")
-
-        yield commit["hash"] + "  " + "".join(shift)
         yield (" " * len(commit["hash"])) + "  " + "".join(connectors)
 
 
