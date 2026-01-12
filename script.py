@@ -85,11 +85,18 @@ def free_columns(columns: list, hash, tree):
 def occupy_columns(columns: list, hash, tree):
     if len(tree[hash]["parents"]) == 2:
         # choose leftmost available column (contains None) to place right parent there
+        right_parent = tree[hash]["parents"][1]
+        # if right parent has two child - it means that branch have been merged
+        # and then continued with another commit to that branch
+        # in this case we won't occupy a new column, so it should be placed under its child
+        if len(tree[right_parent]["children"]) > 1:
+            return
+
         col = list_index(columns, None)
         if col is not None:
-            columns[col] = tree[hash]["parents"][1]
+            columns[col] = right_parent
         if col is None:
-            columns.append(tree[hash]["parents"][1])
+            columns.append(right_parent)
 
 
 def list_index(iterable, value):
