@@ -14,7 +14,7 @@ class AutoList(collections.UserList):
 
 
 def main():
-    commits, tree = parse(cmd("date", limit=50))
+    commits, tree = parse(cmd("topo", limit=100))
     lines = format(commits, tree)
     for line in lines:
         print(line)
@@ -24,6 +24,9 @@ def format(commits, tree):
     fallcommits = AutoList()
     for row, commit in enumerate(commits):
         col = tree[commit["hash"]]["col"]
+
+        if commit["hash"].startswith("848"):
+            pass
 
         # generate commit line
         shift = AutoList(default="  ")
@@ -37,7 +40,14 @@ def format(commits, tree):
         for parent in tree[commit["hash"]]["parents"]:
             parent_col = tree[parent]["col"]
             # parent is beyond chosen commit scope or child and parent are in the same column
-            if parent_col is None or parent_col == col:
+            if (
+                parent_col is None
+                or parent_col == col
+                or (
+                    parent_col < col
+                    and tree[parent]["row"] > tree[commit["hash"]]["row"] + 1
+                )
+            ):
                 connectors.put(col, "│ ")
                 fallcommits.put(col, parent)
                 continue
@@ -45,12 +55,12 @@ def format(commits, tree):
             if parent_col > col:
                 connectors.put(parent_col, "╮ ")
                 fallcommits.put(parent_col, parent)
-                for i, connector in enumerate(connectors[:parent_col]):
+                for i, connector in enumerate(connectors[col:parent_col], start=col):
                     connectors.put(i, "──" if connector == "  " else connector[0] + "─")
         for fcol, fcommit in enumerate(fallcommits):
             for fparent in tree[fcommit]["parents"]:
                 if tree[fparent]["col"] is not None and tree[fparent]["col"] < fcol and tree[fparent]["row"] == row + 1:
-                    connectors.put(fcol, "╯ ")
+                    connectors.put(fcol, "╯" + connectors[fcol][1])
                     fallcommits.put(fcol, None)
                     for i, connector in enumerate(connectors[:fcol]):
                         connectors.put(i, "──" if connector == "  " else connector[0] + "─")
@@ -83,8 +93,11 @@ def free_columns(columns: list, hash, tree):
 
 
 def occupy_columns(columns: list, hash, tree):
+    # TODO: occcupy columns for virtual parents whith are beyond current commit scope
+    # (it's probably already done - check topo order) and then draw lines for these parents
+
     if len(tree[hash]["parents"]) == 2:
-        # choose leftmost available column (contains None) to place right parent there
+
         right_parent = tree[hash]["parents"][1]
         # if right parent has two child - it means that branch have been merged
         # and then continued with another commit to that branch
@@ -92,11 +105,15 @@ def occupy_columns(columns: list, hash, tree):
         if len(tree[right_parent]["children"]) > 1:
             return
 
-        col = list_index(columns, None)
+        current_col = list_index(columns, hash)
+        # after current column, find first available column (contains None) to place right parent there
+        col = list_index(columns[current_col:], None)
         if col is not None:
             columns[col] = right_parent
+            tree[right_parent]["col"] = col
         if col is None:
             columns.append(right_parent)
+            tree[right_parent]["col"] = len(columns) - 1
 
 
 def list_index(iterable, value):
