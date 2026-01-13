@@ -3,7 +3,8 @@ import collections
 
 
 def main():
-    commits, tree = parse(cmd("topo", limit=100))
+    commits_data = cmd("topo", limit=100)
+    commits, tree = parse_tree(commits_data)
     lines = format(commits, tree)
     for line in lines:
         print(line)
@@ -70,16 +71,15 @@ def list_index(iterable, value):
     return None
 
 
-def parse(text):
+def parse_tree(commits_data):
     commits = []
     tree = collections.defaultdict(lambda: {"parents": [], "children": [], "col": None})
 
     columns = []  # currently occupied columns
-    for line in text.split(b"\n"):
-        hash, parents = [v.decode() for v in line.split(b"^")][:2]
+    for hash, parents in commits_data:
         commits.append(hash)
 
-        for parent in parents.split(" "):
+        for parent in parents:
             tree[hash]["parents"].append(parent)
             tree[parent]["children"].append(hash)
 
@@ -96,7 +96,9 @@ def parse(text):
 def cmd(order_type, limit):
     cmd = f'git log --all --pretty=format:%h^%p^%D^%s^%an --max-count={limit} --{order_type}-order'
     result = subprocess.run(cmd.split(" "), cwd="/home/mint/code/ip_api_test_graph", capture_output=True)
-    return result.stdout.strip()
+    for line in result.stdout.strip().split(b"\n"):
+        hash, parents = [v.decode() for v in line.split(b"^")][:2]
+        yield hash, parents.split(" ")
 
 
 if __name__ == "__main__":
