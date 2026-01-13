@@ -2,17 +2,6 @@ import subprocess
 import collections
 
 
-class AutoList(collections.UserList):
-    def __init__(self, data=None, default=None):
-        super().__init__(data or [])
-        self._default = default
-
-    def put(self, index, value):
-        while index > len(self.data) - 1 :
-            self.data.append(self._default)
-        self.data[index] = value
-
-
 def main():
     commits, tree = parse(cmd("topo", limit=100))
     lines = format(commits, tree)
@@ -21,50 +10,8 @@ def main():
 
 
 def format(commits, tree):
-    fallcommits = AutoList()
-    for row, commit in enumerate(commits):
-        col = tree[commit["hash"]]["col"]
-
-        if commit["hash"].startswith("848"):
-            pass
-
-        # generate commit line
-        shift = AutoList(default="  ")
-        [shift.put(fcol, "│ ") for fcol, fcommit in enumerate(fallcommits) if fcommit is not None]
-        shift.put(col, "* ")
-        yield commit["hash"] + "  " + "".join(shift)
-
-        # generate connector line below the commit line
-        connectors = AutoList(default="  ")
-        [connectors.put(fcol, "│ ") for fcol, fcommit in enumerate(fallcommits) if fcommit is not None]
-        for parent in tree[commit["hash"]]["parents"]:
-            parent_col = tree[parent]["col"]
-            # parent is beyond chosen commit scope or child and parent are in the same column
-            if (
-                parent_col is None
-                or parent_col == col
-                or (
-                    parent_col < col
-                    and tree[parent]["row"] > tree[commit["hash"]]["row"] + 1
-                )
-            ):
-                connectors.put(col, "│ ")
-                fallcommits.put(col, parent)
-                continue
-            # branch is merged into current commit
-            if parent_col > col:
-                connectors.put(parent_col, "╮ ")
-                fallcommits.put(parent_col, parent)
-                for i, connector in enumerate(connectors[col:parent_col], start=col):
-                    connectors.put(i, "──" if connector == "  " else connector[0] + "─")
-        for fcol, fcommit in enumerate(fallcommits):
-            for fparent in tree[fcommit]["parents"]:
-                if tree[fparent]["col"] is not None and tree[fparent]["col"] < fcol and tree[fparent]["row"] == row + 1:
-                    connectors.put(fcol, "╯" + connectors[fcol][1])
-                    fallcommits.put(fcol, None)
-                    for i, connector in enumerate(connectors[:fcol]):
-                        connectors.put(i, "──" if connector == "  " else connector[0] + "─")
-        yield (" " * len(commit["hash"])) + "  " + "".join(connectors)
+    for commit in commits:
+        yield commit + "  " + ("  " * tree[commit]["col"]) + "* "
 
 
 def register_column(columns, hash, tree):
@@ -125,12 +72,12 @@ def list_index(iterable, value):
 
 def parse(text):
     commits = []
-    tree = collections.defaultdict(lambda: {"parents": [], "children": [], "col": None, "row": None})
+    tree = collections.defaultdict(lambda: {"parents": [], "children": [], "col": None})
 
     columns = []  # currently occupied columns
-    for row, line in enumerate(text.split(b"\n")):
-        hash, parents, refs, subject, author = [v.decode() for v in line.split(b"^")]
-        commits.append({"hash": hash, "refs": refs, "subject": subject, "author": author})
+    for line in text.split(b"\n"):
+        hash, parents = [v.decode() for v in line.split(b"^")][:2]
+        commits.append(hash)
 
         for parent in parents.split(" "):
             tree[hash]["parents"].append(parent)
@@ -142,7 +89,6 @@ def parse(text):
         occupy_columns(columns, hash, tree)
 
         tree[hash]["col"] = col
-        tree[hash]["row"] = row
 
     return commits, tree
 
