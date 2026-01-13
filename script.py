@@ -15,67 +15,34 @@ def format(commits, tree):
         yield commit + "  " + ("  " * tree[commit]["col"]) + "* "
 
 
-def register_column(columns, hash, tree):
+def get_column(columns, hash):
     for col, col_hash in enumerate(columns):
-        if tree[col_hash]["parents"] and hash == tree[col_hash]["parents"][0]:
-            # either RC or MC.left_parent
-            return col
         if col_hash == hash:
-            # occupied before
-            return col
-
-    # choose leftmost available column (contains None)
-    col = list_index(columns, None)
-    if col is not None:
-        return col
-    columns.append(None)
-    return len(columns) - 1
+            return col  # found column that was occupied before
+    # or choose leftmost available column (contains None)
+    return list_index(columns, None, append=True)
 
 
-def free_columns(columns: list, hash, tree):
-    for child in tree[hash]["children"]:
-        hash_index = list_index(columns, hash)
-        child_index = list_index(columns, child)
-        if child_index is not None and child_index != hash_index and tree[child]["parents"] == [hash]:
-            columns[child_index] = None
+def free_columns(columns: list, hash):
+    for col, col_hash in enumerate(columns):
+        if col_hash == hash:
+            columns[col] = None
 
 
-def occupy_columns(columns: list, hash, tree):
-    # TODO: occcupy columns for virtual parents whith are beyond current commit scope
-    # (it's probably already done - check topo order) and then draw lines for these parents
-
-    if len(tree[hash]["parents"]) == 2:
-
-        right_parent = tree[hash]["parents"][1]
-        # if right parent has two child - it means that branch have been merged
-        # and then continued with another commit to that branch
-        # in this case we won't occupy a new column, so it should be placed under its child
-        if len(tree[right_parent]["children"]) > 1:
-            return
-
-        current_col = list_index(columns, hash)
-        # after current column, find first available column (contains None) to place right parent there
-        col = list_index(columns[current_col:], None)
-        if col is not None:
-            columns[col] = right_parent
-            tree[right_parent]["col"] = col
-        if col is None:
-            columns.append(right_parent)
-            tree[right_parent]["col"] = len(columns) - 1
-
-
-def list_index(iterable, value):
+def list_index(iterable, value, append=False):
     for i, v in enumerate(iterable):
         if v == value:
             return i
-    return None
+    if append:
+        iterable.append(value)
+        return len(iterable) - 1
 
 
 def parse_tree(commits_data):
     commits = []
     tree = collections.defaultdict(lambda: {"parents": [], "children": [], "col": None})
 
-    columns = []  # currently occupied columns
+    columns = []  # represents commits per column after current commit line
     for hash, parents in commits_data:
         commits.append(hash)
 
@@ -83,12 +50,19 @@ def parse_tree(commits_data):
             tree[hash]["parents"].append(parent)
             tree[parent]["children"].append(hash)
 
-        col = register_column(columns, hash, tree)
-        columns[col] = hash
-        free_columns(columns, hash, tree)
-        occupy_columns(columns, hash, tree)
-
+        # define column for current commit
+        col = get_column(columns, hash)
         tree[hash]["col"] = col
+
+        # register left parent of current commit to columns
+        columns[col] = tree[hash]["parents"][0]
+        # free columns that should be merged to current hash
+        free_columns(columns, hash)
+        # occupy column for right parent
+        if len(tree[hash]["parents"]) > 1:
+            right_parent = tree[hash]["parents"][1]
+            col = get_column(columns, right_parent)
+            columns[col] = right_parent
 
     return commits, tree
 
