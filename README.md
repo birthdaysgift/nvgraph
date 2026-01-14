@@ -11,7 +11,7 @@ Git Graph plugin for nvim.
   {
     "biryghdaysgift/nvgraph",
     config = function()
-      local graph = require("graph")
+      local graph = require("nvgraph")
     end
   },
 ```
