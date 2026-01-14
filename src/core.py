@@ -1,13 +1,6 @@
-import subprocess
 import collections
 
-
-def main():
-    commits_data = cmd("topo", limit=100)
-    commits, tree = parse_tree(commits_data)
-    lines = format(commits, tree)
-    for line in lines:
-        print(line)
+from src.utils import list_index
 
 
 def format(commits, tree):
@@ -27,15 +20,6 @@ def free_columns(columns: list, hash):
     for col, col_hash in enumerate(columns):
         if col_hash == hash:
             columns[col] = None
-
-
-def list_index(iterable, value, append=False):
-    for i, v in enumerate(iterable):
-        if v == value:
-            return i
-    if append:
-        iterable.append(value)
-        return len(iterable) - 1
 
 
 def parse_tree(commits_data):
@@ -66,14 +50,3 @@ def parse_tree(commits_data):
 
     return commits, tree
 
-
-def cmd(order_type, limit):
-    cmd = f'git log --all --pretty=format:%h^%p^%D^%s^%an --max-count={limit} --{order_type}-order'
-    result = subprocess.run(cmd.split(" "), cwd="/home/mint/code/ip_api_test_graph", capture_output=True)
-    for line in result.stdout.strip().split(b"\n"):
-        hash, parents = [v.decode() for v in line.split(b"^")][:2]
-        yield hash, parents.split(" ")
-
-
-if __name__ == "__main__":
-    main()
