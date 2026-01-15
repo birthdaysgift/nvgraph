@@ -27,11 +27,20 @@ def format(lines, tree):
         # place merge connectors
         if len(tree[hash]["parents"]) == 2:
             new_br_col = list_index(connector_columns, tree[hash]["parents"][1])
-            if new_br_col is not None:
-                # TODO: fix 9a70a712 connector (date order)
+            # merge from right col to left col
+            if new_br_col is not None and new_br_col > tree[hash]["col"]:
                 connectors[new_br_col] = "╮ "
                 # add horizontal connectors
                 for i in range(tree[hash]["col"], new_br_col):
+                    first_char = connectors[i][0]
+                    if first_char == " ":
+                        first_char = "─"
+                    connectors[i] = first_char + "─"
+            # merge from left col to right col
+            if new_br_col is not None and new_br_col < tree[hash]["col"]:
+                connectors[new_br_col] = "╭ "
+                # add horizontal connectors
+                for i in range(new_br_col, tree[hash]["col"]):
                     first_char = connectors[i][0]
                     if first_char == " ":
                         first_char = "─"
