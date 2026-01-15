@@ -1,10 +1,21 @@
 import collections
 
-from src.utils import AutoList, find_dups, list_index
+from src.utils import AutoList, find_dups, list_index, replace
 
 
 def format(lines, tree):
+    prev_connector_columns = []
     for row, (hash, connector_columns) in enumerate(lines):
+        commit_symbols = AutoList(default="  ")
+
+        prev_connector_columns = replace(prev_connector_columns, hash, None)
+        for con_col, con_hash in enumerate(prev_connector_columns):
+            if con_hash is not None:
+                commit_symbols[con_col] = "│ "
+        commit_symbols[tree[hash]["col"]] = "* "
+
+        yield hash + "  " + "".join(commit_symbols)
+
 
         connectors = AutoList(default="  ")
 
@@ -28,9 +39,10 @@ def format(lines, tree):
                 for c in branchoff_cols:
                     connectors[c] = "╯ "
 
-
-        yield hash + "  " + ("  " * tree[hash]["col"]) + "* "
         yield (" " * len(hash)) + "  " + "".join(connectors)
+
+        prev_connector_columns = connector_columns.copy()
+
 
 def get_column(columns, hash):
     for col, col_hash in enumerate(columns):
@@ -52,7 +64,6 @@ def parse_tree(commits_data):
 
     columns = []  # represents commits per column after current commit line
     for row, (hash, parents) in enumerate(commits_data):
-
         for parent in parents:
             tree[hash]["parents"].append(parent)
             tree[parent]["children"].append(hash)

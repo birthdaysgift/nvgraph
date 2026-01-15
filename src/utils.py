@@ -33,3 +33,11 @@ def find_dups(iterable, exclude=None):
             continue
         seen.append(value)
     return result
+
+
+def replace(iterable, value, replacement):
+    result = iterable.copy()
+    for i, v in enumerate(iterable):
+        if v == value:
+            result[i] = replacement
+    return result
