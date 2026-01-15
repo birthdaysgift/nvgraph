@@ -56,7 +56,10 @@ def format(lines, tree):
                 # add horizontal connectors
                 for c in branchoff_cols:
                     for i in range(tree[branchoff_hash]["col"], c):
-                        connectors[i] = connectors[i][0] + "─"
+                        first_char = connectors[i][0]
+                        if first_char == " ":
+                            first_char = "─"
+                        connectors[i] = first_char + "─"
 
         yield (" " * len(hash)) + "  " + "".join(connectors)
 
