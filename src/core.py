@@ -30,6 +30,12 @@ def format(lines, tree):
             if new_br_col is not None:
                 # TODO: fix 9a70a712 connector (date order)
                 connectors[new_br_col] = "╮ "
+                # add horizontal connectors
+                for i in range(tree[hash]["col"], new_br_col):
+                    first_char = connectors[i][0]
+                    if first_char == " ":
+                        first_char = "─"
+                    connectors[i] = first_char + "─"
 
         # place branchoff connectors
         branch_offs = find_dups(connector_columns, exclude=[None])
@@ -37,7 +43,11 @@ def format(lines, tree):
             branchoff_row = tree[branchoff_hash]["row"]
             if branchoff_row is not None and branchoff_row == row + 1:
                 for c in branchoff_cols:
-                    connectors[c] = "╯ "
+                    connectors[c] = "╯" + connectors[c][1]
+                # add horizontal connectors
+                for c in branchoff_cols:
+                    for i in range(tree[branchoff_hash]["col"], c):
+                        connectors[i] = connectors[i][0] + "─"
 
         yield (" " * len(hash)) + "  " + "".join(connectors)
 
