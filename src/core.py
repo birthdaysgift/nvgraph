@@ -8,10 +8,16 @@ def format(lines, tree):
 
         connectors = AutoList(default="  ")
 
+        # place straight connectors
+        for con_col, con_hash in enumerate(connector_columns):
+            if con_hash is not None:
+                connectors[con_col] = "│ "
+
         # place merge connectors
         if len(tree[hash]["parents"]) == 2:
             new_br_col = list_index(connector_columns, tree[hash]["parents"][1])
             if new_br_col is not None:
+                # TODO: fix 9a70a712 connector (date order)
                 connectors[new_br_col] = "╮ "
 
         # place branchoff connectors
