@@ -74,12 +74,6 @@ def get_column(columns, hash):
     return list_index(columns, None, append=True)
 
 
-def free_columns(columns: list, hash):
-    for col, col_hash in enumerate(columns):
-        if col_hash == hash:
-            columns[col] = None
-
-
 def parse_tree(commits_data):
     commits = []
     tree = collections.defaultdict(lambda: {"parents": [], "col": None, "row": None})
@@ -95,7 +89,9 @@ def parse_tree(commits_data):
         # register left parent of current commit to columns
         columns[col] = tree[hash]["parents"][0]
         # free columns that should be merged to current hash
-        free_columns(columns, hash)
+        for col, col_hash in enumerate(columns):
+            if col_hash == hash:
+                columns[col] = None
         # occupy column for right parent
         if len(tree[hash]["parents"]) > 1:
             right_parent = tree[hash]["parents"][1]
