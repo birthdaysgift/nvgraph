@@ -82,18 +82,15 @@ def free_columns(columns: list, hash):
 
 def parse_tree(commits_data):
     commits = []
-    tree = collections.defaultdict(lambda: {"parents": [], "children": [], "col": None, "row": None})
+    tree = collections.defaultdict(lambda: {"parents": [], "col": None, "row": None})
 
     columns = []  # represents commits per column after current commit line
     for row, (hash, parents) in enumerate(commits_data):
-        for parent in parents:
-            tree[hash]["parents"].append(parent)
-            tree[parent]["children"].append(hash)
-
         # define column for current commit
         col = get_column(columns, hash)
         tree[hash]["col"] = col
         tree[hash]["row"] = row
+        tree[hash]["parents"] = parents
 
         # register left parent of current commit to columns
         columns[col] = tree[hash]["parents"][0]
