@@ -12,7 +12,7 @@ def format(lines, tree):
         for con_col, con_hash in enumerate(prev_connector_columns):
             if con_hash is not None:
                 commit_symbols[con_col] = "│ "
-        commit_symbols[tree[hash]["col"]] = "* "
+        commit_symbols[tree[hash].col] = "* "
 
         yield hash + "  " + "".join(commit_symbols)
 
@@ -25,22 +25,22 @@ def format(lines, tree):
                 connectors[con_col] = "│ "
 
         # place merge connectors
-        if len(tree[hash]["parents"]) == 2:
-            new_br_col = list_index(connector_columns, tree[hash]["parents"][1])
+        if tree[hash].parents.right is not None:
+            new_br_col = list_index(connector_columns, tree[hash].parents.right)
             # merge from right col to left col
-            if new_br_col is not None and new_br_col > tree[hash]["col"]:
+            if new_br_col is not None and new_br_col > tree[hash].col:
                 connectors[new_br_col] = "╮ "
                 # add horizontal connectors
-                for i in range(tree[hash]["col"], new_br_col):
+                for i in range(tree[hash].col, new_br_col):
                     first_char = connectors[i][0]
                     if first_char == " ":
                         first_char = "─"
                     connectors[i] = first_char + "─"
             # merge from left col to right col
-            if new_br_col is not None and new_br_col < tree[hash]["col"]:
+            if new_br_col is not None and new_br_col < tree[hash].col:
                 connectors[new_br_col] = "╭ "
                 # add horizontal connectors
-                for i in range(new_br_col, tree[hash]["col"]):
+                for i in range(new_br_col, tree[hash].col):
                     first_char = connectors[i][0]
                     if first_char == " ":
                         first_char = "─"
@@ -49,13 +49,13 @@ def format(lines, tree):
         # place branchoff connectors
         branch_offs = find_dups(connector_columns, exclude=[None])
         for branchoff_hash, branchoff_cols in branch_offs.items():
-            branchoff_row = tree[branchoff_hash]["row"]
+            branchoff_row = tree[branchoff_hash].row
             if branchoff_row is not None and branchoff_row == row + 1:
                 for c in branchoff_cols:
                     connectors[c] = "╯" + connectors[c][1]
                 # add horizontal connectors
                 for c in branchoff_cols:
-                    for i in range(tree[branchoff_hash]["col"], c):
+                    for i in range(tree[branchoff_hash].col, c):
                         first_char = connectors[i][0]
                         if first_char == " ":
                             first_char = "─"
@@ -80,19 +80,18 @@ def define_columns(commits, tree):
     for hash in commits:
         # define column for current commit
         col = get_column(columns, hash)
-        tree[hash]["col"] = col
+        tree[hash].col = col
 
         # register left parent of current commit to columns
-        columns[col] = tree[hash]["parents"][0]
+        columns[col] = tree[hash].parents.left
         # free columns that should be merged to current hash
         for col, col_hash in enumerate(columns):
             if col_hash == hash:
                 columns[col] = None
         # occupy column for right parent
-        if len(tree[hash]["parents"]) > 1:
-            right_parent = tree[hash]["parents"][1]
-            col = get_column(columns, right_parent)
-            columns[col] = right_parent
+        if tree[hash].parents.right is not None:
+            col = get_column(columns, tree[hash].parents.right)
+            columns[col] = tree[hash].parents.right
 
         lines.append((hash, columns.copy()))
 

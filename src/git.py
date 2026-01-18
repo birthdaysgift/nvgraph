@@ -1,5 +1,19 @@
+from dataclasses import dataclass, field
 import collections
 import subprocess
+
+
+@dataclass
+class Parents:
+    left: str | None = None
+    right: str | None = None
+
+
+@dataclass
+class Commit:
+    col: int | None = None
+    row: int | None = None
+    parents: Parents = field(default_factory=Parents)
 
 
 def cmd(order_type, limit):
@@ -7,11 +21,11 @@ def cmd(order_type, limit):
     result = subprocess.run(cmd.split(" "), cwd="/home/mint/code/ip_api_test_graph", capture_output=True)
 
     commits = []
-    tree = collections.defaultdict(lambda: {"parents": [], "col": None, "row": None})
+    tree = collections.defaultdict(lambda: Commit())
     for row, line in enumerate(result.stdout.strip().split(b"\n")):
         hash, parents = [v.decode() for v in line.split(b"^")][:2]
         commits.append(hash)
-        tree[hash]["parents"] = parents.split(" ")
-        tree[hash]["row"] = row
+        tree[hash].parents = Parents(*parents.split(" "))
+        tree[hash].row = row
     return commits, tree
 
