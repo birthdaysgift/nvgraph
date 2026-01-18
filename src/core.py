@@ -74,17 +74,13 @@ def get_column(columns, hash):
     return list_index(columns, None, append=True)
 
 
-def parse_tree(commits_data):
-    commits = []
-    tree = collections.defaultdict(lambda: {"parents": [], "col": None, "row": None})
-
+def define_columns(commits, tree):
+    lines = []
     columns = []  # represents commits per column after current commit line
-    for row, (hash, parents) in enumerate(commits_data):
+    for hash in commits:
         # define column for current commit
         col = get_column(columns, hash)
         tree[hash]["col"] = col
-        tree[hash]["row"] = row
-        tree[hash]["parents"] = parents
 
         # register left parent of current commit to columns
         columns[col] = tree[hash]["parents"][0]
@@ -98,7 +94,7 @@ def parse_tree(commits_data):
             col = get_column(columns, right_parent)
             columns[col] = right_parent
 
-        commits.append((hash, columns.copy()))
+        lines.append((hash, columns.copy()))
 
-    return commits, tree
+    return lines, tree
 

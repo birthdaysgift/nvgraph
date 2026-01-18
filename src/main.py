@@ -1,11 +1,11 @@
-from src.core import parse_tree, format
+from src.core import define_columns, format
 from src.git import cmd
 
 
 def main():
-    commits_data = cmd("date", limit=100)
-    commits, tree = parse_tree(commits_data)
-    lines = format(commits, tree)
+    commits, tree = cmd("date", limit=100)
+    rows, tree = define_columns(commits, tree)
+    lines = format(rows, tree)
     for line in lines:
         print(line)
 
