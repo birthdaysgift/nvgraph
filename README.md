@@ -9,7 +9,7 @@ Git Graph plugin for nvim.
 
 ```lua
   {
-    "biryghdaysgift/nvgraph",
+    "birthdaysgift/nvgraph",
     config = function()
       local graph = require("nvgraph")
     end
