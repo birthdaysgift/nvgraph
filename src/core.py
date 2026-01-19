@@ -85,9 +85,7 @@ def define_columns(commits, tree):
         # register left parent of current commit to columns
         columns[col] = tree[hash].parents.left
         # free columns that should be merged to current hash
-        for col, col_hash in enumerate(columns):
-            if col_hash == hash:
-                columns[col] = None
+        columns = replace(columns, hash, None)
         # occupy column for right parent
         if tree[hash].parents.right is not None:
             col = get_column(columns, tree[hash].parents.right)
