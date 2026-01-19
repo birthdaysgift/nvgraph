@@ -35,12 +35,12 @@ def format(lines, tree):
                 connectors[new_br_col] = "╭ "
                 add_horizontal_connectors(connectors, new_br_col, tree[hash].col)
 
-        # place branchoff connectors
-        branch_offs = find_dups(connector_columns, exclude=[None])
-        for branchoff_hash, c in branch_offs:
-            if tree[branchoff_hash].row == row + 1:
-                connectors[c] = "╯" + connectors[c][1]
-                add_horizontal_connectors(connectors, tree[branchoff_hash].col, c)
+        # place fork connectors
+        forks = find_dups(connector_columns, exclude=[None])
+        for fork_hash, fork_col in forks:
+            if tree[fork_hash].row == row + 1:
+                connectors[fork_col] = "╯" + connectors[fork_col][1]
+                add_horizontal_connectors(connectors, tree[fork_hash].col, fork_col)
 
         yield (" " * len(hash)) + "  " + "".join(connectors)
 
