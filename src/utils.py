@@ -23,16 +23,14 @@ def list_index(iterable, value, append=False):
 
 def find_dups(iterable, exclude=None):
     exclude = exclude or tuple()
-    result = collections.defaultdict(list)
     seen = []
     for i, value in enumerate(iterable):
         if value in exclude:
             continue
         if value in seen:
-            result[value].append(i)
+            yield value, i
             continue
         seen.append(value)
-    return result
 
 
 def replace(iterable, value, replacement):

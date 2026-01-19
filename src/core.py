@@ -48,18 +48,16 @@ def format(lines, tree):
 
         # place branchoff connectors
         branch_offs = find_dups(connector_columns, exclude=[None])
-        for branchoff_hash, branchoff_cols in branch_offs.items():
+        for branchoff_hash, c in branch_offs:
             branchoff_row = tree[branchoff_hash].row
             if branchoff_row is not None and branchoff_row == row + 1:
-                for c in branchoff_cols:
-                    connectors[c] = "╯" + connectors[c][1]
+                connectors[c] = "╯" + connectors[c][1]
                 # add horizontal connectors
-                for c in branchoff_cols:
-                    for i in range(tree[branchoff_hash].col, c):
-                        first_char = connectors[i][0]
-                        if first_char == " ":
-                            first_char = "─"
-                        connectors[i] = first_char + "─"
+                for i in range(tree[branchoff_hash].col, c):
+                    first_char = connectors[i][0]
+                    if first_char == " ":
+                        first_char = "─"
+                    connectors[i] = first_char + "─"
 
         yield (" " * len(hash)) + "  " + "".join(connectors)
 
