@@ -39,3 +39,12 @@ def replace(iterable, value, replacement):
         if v == value:
             result[i] = replacement
     return result
+
+
+def add_horizontal_connectors(connectors, start, stop):
+    for i in range(start, stop):
+        first_char = connectors[i][0]
+        if first_char == " ":
+            first_char = "─"
+        connectors[i] = first_char + "─"
+

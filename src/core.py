@@ -1,7 +1,6 @@
 import collections
 
-from src.utils import AutoList, find_dups, list_index, replace
-
+from src.utils import AutoList, find_dups, list_index, replace, add_horizontal_connectors
 
 def format(lines, tree):
     prev_connector_columns = []
@@ -30,21 +29,11 @@ def format(lines, tree):
             # merge from right col to left col
             if new_br_col is not None and new_br_col > tree[hash].col:
                 connectors[new_br_col] = "╮ "
-                # add horizontal connectors
-                for i in range(tree[hash].col, new_br_col):
-                    first_char = connectors[i][0]
-                    if first_char == " ":
-                        first_char = "─"
-                    connectors[i] = first_char + "─"
+                add_horizontal_connectors(connectors, tree[hash].col, new_br_col)
             # merge from left col to right col
             if new_br_col is not None and new_br_col < tree[hash].col:
                 connectors[new_br_col] = "╭ "
-                # add horizontal connectors
-                for i in range(new_br_col, tree[hash].col):
-                    first_char = connectors[i][0]
-                    if first_char == " ":
-                        first_char = "─"
-                    connectors[i] = first_char + "─"
+                add_horizontal_connectors(connectors, new_br_col, tree[hash].col)
 
         # place branchoff connectors
         branch_offs = find_dups(connector_columns, exclude=[None])
@@ -52,12 +41,7 @@ def format(lines, tree):
             branchoff_row = tree[branchoff_hash].row
             if branchoff_row is not None and branchoff_row == row + 1:
                 connectors[c] = "╯" + connectors[c][1]
-                # add horizontal connectors
-                for i in range(tree[branchoff_hash].col, c):
-                    first_char = connectors[i][0]
-                    if first_char == " ":
-                        first_char = "─"
-                    connectors[i] = first_char + "─"
+                add_horizontal_connectors(connectors, tree[branchoff_hash].col, c)
 
         yield (" " * len(hash)) + "  " + "".join(connectors)
 
