@@ -38,8 +38,7 @@ def format(lines, tree):
         # place branchoff connectors
         branch_offs = find_dups(connector_columns, exclude=[None])
         for branchoff_hash, c in branch_offs:
-            branchoff_row = tree[branchoff_hash].row
-            if branchoff_row is not None and branchoff_row == row + 1:
+            if tree[branchoff_hash].row == row + 1:
                 connectors[c] = "╯" + connectors[c][1]
                 add_horizontal_connectors(connectors, tree[branchoff_hash].col, c)
 
