@@ -53,17 +53,21 @@ def format(lines, tree):
         prev_connector_columns = connector_columns.copy()
 
 
-def get_column(columns, hash):
-    for col, col_hash in enumerate(columns):
+def get_column(columns, hash, start=None):
+    start = start or 0
+    for col, col_hash in enumerate(columns[start:], start):
+        if col_hash == hash:
+            return col  # found column that was occupied before
+    for col, col_hash in enumerate(columns[:start]):
         if col_hash == hash:
             return col  # found column that was occupied before
     # or choose leftmost available column (contains None)
-    return list_index(columns, None, append=True)
+    return list_index(columns, None, append=True, start=start)
 
 
 def define_columns(commits, tree):
     lines = []
-    columns = []  # represents commits per column after current commit line
+    columns = AutoList(default=None)  # represents commits per column after current commit line
     for hash in commits:
         # define column for current commit
         col = get_column(columns, hash)
@@ -75,7 +79,7 @@ def define_columns(commits, tree):
         columns = replace(columns, hash, None)
         # occupy column for right parent
         if tree[hash].parents.right is not None:
-            col = get_column(columns, tree[hash].parents.right)
+            col = get_column(columns, tree[hash].parents.right, start=col)
             columns[col] = tree[hash].parents.right
 
         lines.append((hash, columns.copy()))

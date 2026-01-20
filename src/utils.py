@@ -12,8 +12,9 @@ class AutoList(collections.UserList):
         self.data[index] = value
 
 
-def list_index(iterable, value, append=False):
-    for i, v in enumerate(iterable):
+def list_index(iterable, value, append=False, start=None):
+    start = start or 0
+    for i, v in enumerate(iterable[start:], start):
         if v == value:
             return i
     if append:
