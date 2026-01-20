@@ -28,11 +28,11 @@ def format(lines, tree):
             new_br_col = list_index(connector_columns, tree[hash].parents.right)
             # merge from right col to left col
             if new_br_col is not None and new_br_col > tree[hash].col:
-                connectors[new_br_col] = "╮ "
+                connectors[new_br_col] = "╮" + connectors[new_br_col][1]
                 add_horizontal_connectors(connectors, tree[hash].col, new_br_col)
             # merge from left col to right col
             if new_br_col is not None and new_br_col < tree[hash].col:
-                connectors[new_br_col] = "╭ "
+                connectors[new_br_col] = "╭" + connectors[new_br_col][1]
                 add_horizontal_connectors(connectors, new_br_col, tree[hash].col)
 
         # place fork connectors
