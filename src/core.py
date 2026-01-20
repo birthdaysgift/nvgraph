@@ -39,8 +39,14 @@ def format(lines, tree):
         forks = find_dups(connector_columns, exclude=[None])
         for fork_hash, fork_col in forks:
             if tree[fork_hash].row == row + 1:
-                connectors[fork_col] = "╯" + connectors[fork_col][1]
-                add_horizontal_connectors(connectors, tree[fork_hash].col, fork_col)
+                # fork from left to right
+                if fork_col > tree[fork_hash].col:
+                    connectors[fork_col] = "╯" + connectors[fork_col][1]
+                    add_horizontal_connectors(connectors, tree[fork_hash].col, fork_col)
+                # fork from right to left
+                if fork_col < tree[fork_hash].col:
+                    connectors[fork_col] = "╰" + connectors[fork_col][1]
+                    add_horizontal_connectors(connectors, fork_col, tree[fork_hash].col)
 
         yield (" " * len(hash)) + "  " + "".join(connectors)
 
