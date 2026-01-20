@@ -25,7 +25,7 @@ def cmd(order_type, limit):
     for row, line in enumerate(result.stdout.strip().split(b"\n")):
         hash, parents = [v.decode() for v in line.split(b"^")][:2]
         commits.append(hash)
-        tree[hash].parents = Parents(*parents.split(" "))
+        tree[hash].parents = Parents(*map(lambda p: p.strip() or None, parents.split(" ")))
         tree[hash].row = row
     return commits, tree
 
